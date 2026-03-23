@@ -47,16 +47,34 @@ weight_A25 <- weight_A25 %>%
     daily_gain20 = (day20 - day0) / 20,
     daily_gain10_20 = (day20 - day10) / 10
   )
+```
+
+```{r,echo=FALSE}
+# 1. データをグループごとに分割してShapiro-Wilk検定を適用
+norm_results <- lapply(split(weight_A25$daily_gain10_20,weight_A25$group), shapiro.test)
+
+# 2. p値だけを抽出
+p_values <- sapply(norm_results, function(x) x$p.value)
+
+# 3. p値の補正（Holm法など）
+p.adjust(p_values, method = "holm")
+
 
 ```
+
+```{r,echo=FALSE}
+leveneTest(daily_gain10_20 ~ group,data = weight_A25, center = median)
+
+```
+
 
 ### 10日目から20日目までの１日当たりの増体重量の比較
 
 ```{r,echo=FALSE}
 # ① 統計計算（Tukey検定）を実行
 stat.test <- weight_A25 %>%
-  tukey_hsd(daily_gain10_20 ~ group) %>% # ANOVA後のTukey法
-  add_y_position()             # グラフ上の描画位置を自動計算
+  tukey_hsd(daily_gain10_20 ~ group) %>%
+  add_y_position()
 
 # ② 描画
 ggboxplot(weight_A25, x = "group", y = "daily_gain10_20",outlier.shape = NA) +
